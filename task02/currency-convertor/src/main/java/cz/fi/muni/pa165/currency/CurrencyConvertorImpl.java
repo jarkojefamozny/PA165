@@ -40,6 +40,6 @@ public class CurrencyConvertorImpl implements CurrencyConvertor {
             return exchangeRate.multiply(sourceAmount).setScale(2, RoundingMode.HALF_EVEN);
         } catch (ExternalServiceFailureException ex) {
             throw new UnknownExchangeRateException("Error when fetching exchange rate", ex);
-}
+        }
     }
 }

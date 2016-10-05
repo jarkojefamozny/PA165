@@ -4,62 +4,66 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import static org.mockito.Mockito.*;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class CurrencyConvertorImplTest {
-
+    private static Currency USD = Currency.getInstance("USD");
+    private static Currency EUR = Currency.getInstance("EUR");
+    
+    
+    @Mock
+    private ExchangeRateTable xTable;
+    
+    private CurrencyConvertor cc;
+    
+    @Before
+    public void init() {
+        cc = new CurrencyConvertorImpl(xTable);
+    }
+    
     @Test
-    public void testConvert() {
+    public void testConvert() throws ExternalServiceFailureException {
         // Don't forget to test border values and proper rounding.
-               
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
+        when(xTable.getExchangeRate(USD, EUR)).thenReturn(new BigDecimal("0.89"));
         
-        when(cc.convert(Currency.getInstance("USD"), Currency.getInstance("EUR"),
-                new BigDecimal("100"))).thenReturn(new BigDecimal("89.21"));
         
-        when(cc.convert(Currency.getInstance("USD"), Currency.getInstance("EUR"),
-                new BigDecimal("0"))).thenReturn(new BigDecimal("0"));
-        
-        when(cc.convert(Currency.getInstance("USD"), Currency.getInstance("EUR"),
-                new BigDecimal("81.5"))).thenReturn(new BigDecimal("72.71"));
+        assertEquals(new BigDecimal("89.00"), cc.convert(USD, EUR, new BigDecimal("100.00")));
+        assertEquals(new BigDecimal("0.00"), cc.convert(USD, EUR, new BigDecimal("0.00")));
+        assertEquals(new BigDecimal("72.54"), cc.convert(USD, EUR, new BigDecimal("81.5")));
     }
 
     @Test (expected = IllegalArgumentException.class)
     public void testConvertWithNullSourceCurrency() {
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
-        
-        cc.convert(null, Currency.getInstance("EUR"),
+        cc.convert(null, EUR,
                 new BigDecimal("100"));
     }
 
     @Test (expected = IllegalArgumentException.class)
-    public void testConvertWithNullTargetCurrency() {
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
-        
-        cc.convert(Currency.getInstance("EUR"), null,
+    public void testConvertWithNullTargetCurrency() {        
+        cc.convert(EUR, null,
                 new BigDecimal("100"));
     }
 
-    @Test (expected= UnknownExchangeRateException.class)
-    public void testConvertWithNullSourceAmount() {
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
-        
-        cc.convert(Currency.getInstance("USD"), Currency.getInstance("EUR"),
-                null);
+    @Test (expected= IllegalArgumentException.class)
+    public void testConvertWithNullSourceAmount() {        
+        cc.convert(USD, EUR, null);
     }
 
-    @Test (expected= UnknownExchangeRateException.class)
-    public void testConvertWithUnknownCurrency() {
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
-        
-        cc.convert(Currency.getInstance("YOLO"), Currency.getInstance("TROLLO"),
-                new BigDecimal("100"));
+    @Test (expected = UnknownExchangeRateException.class)
+    public void testConvertWithUnknownCurrency() throws ExternalServiceFailureException {
+        when(xTable.getExchangeRate(USD, EUR)).thenReturn(null);
+        cc.convert(USD, EUR, new BigDecimal("100"));
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void testConvertWithExternalServiceFailure() {
-        CurrencyConvertor cc = new CurrencyConvertorImpl(mock(ExchangeRateTable.class));
-        
-        cc.convert(null,null,null);
+    @Test (expected = UnknownExchangeRateException.class)
+    public void testConvertWithExternalServiceFailure() throws ExternalServiceFailureException {     
+        when(xTable.getExchangeRate(USD, EUR)).
+                thenThrow(UnknownExchangeRateException.class);
+        cc.convert(USD, EUR, new BigDecimal("100"));
     }
 }
