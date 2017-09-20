@@ -13,7 +13,7 @@ public class App
 {
     public static void main( String[] args )
     {
-    	List<String> messages = new ArrayList<>();
+    	List<String> messages = new ArrayList();
     	messages.add("Hello" );
     	messages.add("World" );
         System.out.println( messages);
