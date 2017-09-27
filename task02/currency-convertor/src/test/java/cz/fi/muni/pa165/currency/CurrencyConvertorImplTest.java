@@ -2,6 +2,7 @@ package cz.fi.muni.pa165.currency;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -60,10 +61,10 @@ public class CurrencyConvertorImplTest {
         cc.convert(USD, EUR, new BigDecimal("100"));
     }
 
-    @Test (expected = UnknownExchangeRateException.class)
-    public void testConvertWithExternalServiceFailure() throws ExternalServiceFailureException {     
-        when(xTable.getExchangeRate(USD, EUR)).
-                thenThrow(UnknownExchangeRateException.class);
-        cc.convert(USD, EUR, new BigDecimal("100"));
+    @Test
+    public void testConvertWithExternalServiceFailure() throws ExternalServiceFailureException {  
+        doThrow(ExternalServiceFailureException.class).when(xTable).getExchangeRate(USD, EUR);
+        assertThatThrownBy(() -> cc.convert(USD, EUR, BigDecimal.ONE)).isInstanceOf(UnknownExchangeRateException.class);
     }
 }
+
