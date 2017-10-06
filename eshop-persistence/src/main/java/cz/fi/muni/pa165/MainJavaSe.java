@@ -6,11 +6,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import cz.fi.muni.pa165.entity.Product;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import cz.fi.muni.pa165.entity.Category;
-import cz.fi.muni.pa165.entity.Product;
+import cz.fi.muni.pa165.entity.Color;
+import java.util.Calendar;
+import javax.persistence.PersistenceException;
 
 public class MainJavaSe {
 	private static EntityManagerFactory emf;
@@ -22,7 +25,7 @@ public class MainJavaSe {
 		emf = Persistence.createEntityManagerFactory("default");
 		try {
 			// BEGIN YOUR CODE
-			task04();
+			task06();
 			// END YOUR CODE
 		} finally {
 			emf.close();
@@ -36,7 +39,18 @@ public class MainJavaSe {
 		// You must first obtain the Entity manager
 		// Then you have to start transaction using getTransaction().begin()
 		// Then use persist() to persist both of the categories and finally commit the transaction
+                EntityManager emWork = emf.createEntityManager();
+		emWork.getTransaction().begin();
+		Category c1 = new Category();
+		c1.setName("Electronics");
+		Category c2=new Category();
+		c2.setName("Musical");
+		emWork.persist(c1);
+		emWork.persist(c2);
+		
+                emWork.getTransaction().commit();
 
+                
 		// The code below is just testing code. Do not modify it
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
@@ -68,7 +82,13 @@ public class MainJavaSe {
 		// TODO under this line. create new EM and start new transaction. Merge
 		// the detached category
 		// into the context and change the name to "Electro"
-
+                
+		EntityManager em2 = emf.createEntityManager();
+		em2.getTransaction().begin();
+		category = em2.merge(category);
+		category.setName("Electro");
+		em2.getTransaction().commit();
+                em2.close();
 
 		// The code below is just testing code. Do not modify it
 		EntityManager checkingEm = emf.createEntityManager();
@@ -94,7 +114,19 @@ public class MainJavaSe {
 		// Additional task: Change the underlying table of Product entity to be ESHOP_PRODUCTS. After you do this, check this by inspecting console output (the CREATE TABLE statement)
 		//
 		// To test your code uncomment the commented code at the end of this method.
-
+                Product prod = new Product();
+		prod.setName("Guitar");
+		prod.setColor(Color.BLACK);
+		Calendar cal1 = Calendar.getInstance();
+		cal1.set(Calendar.YEAR, 2011);
+		cal1.set(Calendar.MONTH, 0);
+		cal1.set(Calendar.DAY_OF_MONTH, 20);
+		prod.setAddedDate(cal1.getTime());
+		EntityManager e = emf.createEntityManager();
+		e.getTransaction().begin();
+		e.persist(prod);
+		e.getTransaction().commit();
+		e.close();
 
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
@@ -104,7 +136,7 @@ public class MainJavaSe {
 		em.close();
 
 	/** TODO Uncomment the following test code after you are finished!
-	 
+	 */
 		assertEq(p.getName(), "Guitar");
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(p.getAddedDate());
@@ -137,7 +169,6 @@ public class MainJavaSe {
 	
 
 		System.out.println("Task6 ok!");
-		*/
 	}
 	
 	private static void task08() {
